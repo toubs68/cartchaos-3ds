@@ -1,0 +1,31 @@
+name: diag
+on:
+  workflow_dispatch:
+  push:
+    branches: [ diag ]
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+    steps:
+      - name: Explore toolchain layout
+        run: |
+          echo "=== tools ==="
+          which arm-none-eabi-g++ 3dsxtool smdhtool makerom bannertool || true
+          echo "=== /opt/devkitpro ==="
+          ls -la /opt/devkitpro 2>/dev/null || echo "no /opt/devkitpro"
+          echo "=== find 3dsx.specs ==="
+          find / -name "3dsx.specs" 2>/dev/null | head
+          echo "=== find 3dsx_crt0.o ==="
+          find / -name "3dsx_crt0.o" 2>/dev/null | head
+          echo "=== find libndsp.a / libctrud.a ==="
+          find / -name "libndsp.a" -o -name "libctrud.a" 2>/dev/null | head
+          echo "=== portlibs/3ds/lib ==="
+          ls /opt/devkitpro/portlibs/3ds/lib 2>/dev/null | head -50 || echo "no portlibs/3ds"
+          echo "=== libctru/lib ==="
+          ls /opt/devkitpro/libctru/lib 2>/dev/null | head || echo "no libctru/lib"
+          echo "=== citro2d/lib ==="
+          ls /opt/devkitpro/citro2d/lib 2>/dev/null | head || echo "no citro2d/lib"
+          echo "=== arm-none-eabi lib (crt0 etc) ==="
+          ls /opt/devkitpro/devkitARM/arm-none-eabi/lib 2>/dev/null | grep -E "3dsx|crt0" | head
