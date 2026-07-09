@@ -1,0 +1,60 @@
+name: Build 3DS (cartchaos.3dsx)
+
+# Compiles Cart Chaos 3D into a Nintendo 3DS homebrew .3dsx (and .smdh)
+# entirely in GitHub's free CI cloud. No local toolchain needed.
+#
+# How to get the game:
+#   1. Push this repo to GitHub (see README "Build in the cloud").
+#   2. Go to Actions -> "Build 3DS" -> run it (or just push / make a tag).
+#   3. Download the artifact "cartchaos-3dsx" (contains cartchaos.3dsx + .smdh).
+#   4. Copy both files to /3ds/CartChaos/ on your homebrewed 3DS SD card.
+#   5. (Optional) create a tag like v1.0.0 to auto-publish a Release.
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:    [ 'v*' ]
+  workflow_dispatch:        # lets you run it manually from the Actions tab
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest   # devkitARM + 3ds-dev + 3dsxtool/smdhtool
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          arm-none-eabi-g++ --version | head -1
+          which 3dsxtool smdhtool || true
+
+      - name: Build .3dsx + .smdh
+        run: make -j"$(nproc)"
+
+      - name: List artifacts
+        run: ls -la build/ cartchaos.3dsx cartchaos.smdh 2>/dev/null
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cartchaos-3dsx
+          path: |
+            build/cartchaos.3dsx
+            build/cartchaos.smdh
+          if-no-files-found: error
+          retention-days: 90
+
+      # Only when a version tag (vX.Y.Z) is pushed: auto-publish a Release.
+      - name: Publish Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/cartchaos.3dsx
+            build/cartchaos.smdh
+          name: Cart Chaos 3D ${{ github.ref_name }}
+          generate_release_notes: true

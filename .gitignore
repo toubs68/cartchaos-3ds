@@ -1,0 +1,6 @@
+# Build output
+build/
+cartchaos.3dsx
+cartchaos.smdh
+*.o
+*.d
