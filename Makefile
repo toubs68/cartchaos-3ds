@@ -42,13 +42,16 @@ CXXFLAGS := $(CFLAGS)
 # startfile search, which ignores -L). The -L paths cover libctru/citro2d/
 # portlibs; ndsp/ctrud are provided by libctru.
 CRT0    := $(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu/3dsx_crt0.o
+# Hard-float (VFP) startfiles so the final ELF ABI matches libctru/libstdc++.
+FPUCRT  := $(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu
 LDSCRIPT := $(DEVKITARM)/arm-none-eabi/lib/3dsx.ld
 LDFLAGS := -g -Wl,--emit-relocs -Wl,--use-blx -Wl,--gc-sections \
            -L$(DEVKITARM)/arm-none-eabi/lib \
            -L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu \
            -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
 
-LIBS    := -lctru -lcitro2d -lctrud
+# citro2d is a layer over citro3d; the 3DS hard-float libs provide ndsp/ctrud too.
+LIBS    := -lctru -lcitro2d -lcitro3d -lctrud -lm
 
 SMDHTOOL    := smdhtool
 
@@ -63,7 +66,12 @@ $(BUILD)/%.o: %.cpp
 	$(CC) -MMD -MP -MF $(BUILD)/$*.d $(CXXFLAGS) -c $< -o $@
 
 $(BUILD)/$(TARGET).elf: $(OFILES)
-	$(CC) $(OFILES) $(CRT0) -T$(LDSCRIPT) $(LDFLAGS) $(LIBS) -o $@
+	$(CC) -nostartfiles \
+	  $(CRT0) $(FPUCRT)/crti.o $(FPUCRT)/crtbegin.o \
+	  $(OFILES) \
+	  -T$(LDSCRIPT) $(LDFLAGS) $(LIBS) \
+	  $(FPUCRT)/crtend.o $(FPUCRT)/crtn.o \
+	  -o $@
 
 $(BUILD)/$(TARGET).smdh: $(APP_ICON)
 	@mkdir -p $(dir $@)
