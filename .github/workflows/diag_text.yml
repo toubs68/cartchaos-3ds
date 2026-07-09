@@ -9,11 +9,13 @@ jobs:
     container:
       image: devkitpro/devkitarm:latest
     steps:
-      - name: citro2d text/font API
+      - name: locate + dump citro2d text/font headers
         run: |
-          echo "=== c2d/text.h ==="
-          cat /opt/devkitpro/citro2d/include/c2d/text.h 2>/dev/null | sed -n '1,200p'
-          echo "=== c2d/font.h ==="
-          cat /opt/devkitpro/citro2d/include/c2d/font.h 2>/dev/null | sed -n '1,200p'
-          echo "=== bindings ==="
-          grep -rnE "TextBufSetFont|FontSet|SetFont|FontLoad|TextBufNew|TextParse|defaultFont|CurrentFont" /opt/devkitpro/citro2d/include/c2d/ 2>/dev/null | head -50
+          echo "=== find c2d headers ==="
+          find / -path "*c2d*" -name "*.h" 2>/dev/null | head -40
+          echo "=== find text.h anywhere ==="
+          find / -name "text.h" 2>/dev/null | head
+          echo "=== find font.h anywhere ==="
+          find / -name "font.h" 2>/dev/null | head
+          echo "=== grep TextParse across all c2d headers ==="
+          find / -path "*c2d*" -name "*.h" -exec grep -l "TextParse" {} \; 2>/dev/null
