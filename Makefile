@@ -46,10 +46,11 @@ CXXFLAGS := $(CFLAGS)
 # hard-float (VFP) and the matching crti/crtbegin multilib is selected —
 # otherwise the ELF defaults to soft-float and mismatches libctru.
 LDSCRIPT := $(DEVKITARM)/arm-none-eabi/lib/3dsx.ld
+# NB: do NOT add -L$(DEVKITARM)/arm-none-eabi/lib here — GCC already knows
+# its own lib dir and applies the armv6k/fpu (hard-float) multilib from the
+# ARCH flags above. Overriding it forces the soft-float libstdc++/libc.
 LDFLAGS := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfpv2 \
            -specs=cartchaos.specs -g \
-           -L$(DEVKITARM)/arm-none-eabi/lib \
-           -L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu \
            -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
 
 # citro2d is a layer over citro3d; the 3DS hard-float libs provide ndsp/ctrud too.
