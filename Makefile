@@ -43,7 +43,7 @@ CXXFLAGS := $(CFLAGS)
 # portlibs; ndsp/ctrud are provided by libctru.
 CRT0    := $(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu/3dsx_crt0.o
 LDSCRIPT := $(DEVKITARM)/arm-none-eabi/lib/3dsx.ld
-LDFLAGS := -g --emit-relocs --use-blx --gc-sections \
+LDFLAGS := -g -Wl,--emit-relocs -Wl,--use-blx -Wl,--gc-sections \
            -L$(DEVKITARM)/arm-none-eabi/lib \
            -L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu \
            -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
