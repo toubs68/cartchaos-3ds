@@ -4,31 +4,18 @@
 #  Requires devkitARM (https://devkitpro.org) with the `3ds-dev` package set:
 #      (dkp-)pacman -S 3ds-dev
 #
-#  Build on a PC/Mac/Linux (or in GitHub Actions via devkitpro/devkitarm),
-#  then copy the output to your homebrewed 3DS:
+#  Build then copy the output to your homebrewed 3DS:
 #      make
 #      # -> build/cartchaos.3dsx  build/cartchaos.smdh  (copy both to /3ds/CartChaos/)
 # ============================================================================
-
-# --- devkitPro toolchain location (env vars set by the container) ----------
-DEVKITPRO  ?= /opt/devkitpro
-DEVKITARM  ?= $(DEVKITPRO)/devkitARM
-PORTLIBS   ?= $(DEVKITPRO)/portlibs/3ds
-
-# Pull in the canonical 3DS build rules (ARCH, CFLAGS, LDFLAGS, library paths,
-# and the correct -specs=3dsx.specs handling). This is what the
-# devkitpro/devkitarm image expects.
-include $(DEVKITARM)/3ds_rules
 
 TARGET      := cartchaos
 BUILD       := build
 SOURCES     := source/main.cpp
 DATA        :=
-INCLUDES    := -I$(DEVKITPRO)/libctru/include -I$(DEVKITPRO)/citro2d/include
+INCLUDES    :=
 
-# Link the homebrew system libs plus the portlibs (ndsp audio, ctrud services).
-LIBS        := -lctru -lcitro2d -lctrud -lndsp \
-               -L$(DEVKITPRO)/portlibs/3ds/lib
+LIBS        := -lctru -lcitro2d -lctrud -lndsp
 
 ICON        := resources/icon.png
 SMDHTOOL    := smdhtool
@@ -36,8 +23,30 @@ TITLE       := Cart Chaos 3D
 DESC        := downhill shopping-cart mayhem
 AUTHOR      := OpenClaude
 
+# --- devkitPro toolchain location (env vars set by the devkitpro container) ---
+DEVKITPRO  ?= /opt/devkitpro
+DEVKITARM  ?= $(DEVKITPRO)/devkitARM
+CTRULIB     ?= $(DEVKITPRO)/libctru
+CITRO2D     ?= $(DEVKITPRO)/citro2d
+PORTLIBS    ?= $(DEVKITPRO)/portlibs/3ds
+
 export PATH := $(DEVKITARM)/bin:$(PATH)
 CC          := $(DEVKITARM)/bin/arm-none-eabi-g++
+OBJCOPY     := $(DEVKITARM)/bin/arm-none-eabi-objcopy
+STRIP       := $(DEVKITARM)/bin/arm-none-eabi-strip
+
+# Canonical 3DS arch flags. -mfpu=vfpv2 is REQUIRED so the linker finds the
+# right multilib (3dsx_crt0.o) and the 3DS libraries.
+CFLAGS  := -Wall -O2 -march=armv6k -mtune=mpcore -mfloat-abi=hard \
+           -mfpu=vfpv2 -ffast-math -fno-rtti -std=gnu++17 \
+           -I$(CTRULIB)/include -I$(CITRO2D)/include $(INCLUDES)
+CXXFLAGS := $(CFLAGS)
+
+# -specs must point at the 3dsx specs file by full path so the 3DS crt0 and
+# library search directories are pulled in. Library dirs: libctru, citro2d,
+# and the 3DS portlibs (which provide libndsp / libctrud).
+LDFLAGS := -specs=$(DEVKITARM)/arm-none-eabi/lib/3dsx.specs -g \
+           -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
 
 # Auto-generated dependency list
 OFILES := $(SOURCES:%.cpp=$(BUILD)/%.o)

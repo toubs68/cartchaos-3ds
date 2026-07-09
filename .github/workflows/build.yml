@@ -29,8 +29,9 @@ jobs:
 
       - name: Show toolchain
         run: |
-          arm-none-eabi-g++ --version | head -1
+          /opt/devkitpro/devkitARM/bin/arm-none-eabi-g++ --version | head -1
           which 3dsxtool smdhtool || true
+          ls /opt/devkitpro/portlibs/3ds/lib | grep -E "ndsp|ctrud" || true
 
       - name: Build .3dsx + .smdh
         run: make -j"$(nproc)"
