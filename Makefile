@@ -39,7 +39,7 @@ OBJCOPY     := $(DEVKITARM)/bin/arm-none-eabi-objcopy
 STRIP       := $(DEVKITARM)/bin/arm-none-eabi-strip
 
 CFLAGS  := -Wall -O2 -march=armv6k -mtune=mpcore -mfloat-abi=hard \
-           -mfpu=vfp -ffast-math -fno-rtti -std=gnu++17 \
+           -mfpu=vfpv2 -ffast-math -fno-rtti -std=gnu++17 \
            -I$(CTRULIB)/include -I$(CITRO2D)/include $(INCLUDES)
 CXXFLAGS:= $(CFLAGS)
 LDFLAGS := -specs=3dsx.specs -g $(LIBS) \
