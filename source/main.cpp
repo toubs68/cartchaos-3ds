@@ -574,7 +574,10 @@ int main(){
     C3D_RenderTarget* top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
     C3D_RenderTarget* bot = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
     toneInit();
-    g_font = C2D_FontLoadSystem(CFG_REGION_USA);
+    // Note: do NOT call C2D_FontLoadSystem here -- on real hardware it can
+    // svcBreak (prefetch abort) at boot. Text uses the default system font
+    // via C2D_TextBufNew/C2D_TextParse, so no font load is needed.
+    g_font = NULL;
     if (!g_textBuf) g_textBuf = C2D_TextBufNew(4096);
 
     Game g(0x1234 + (uint32_t)osGetTime());
