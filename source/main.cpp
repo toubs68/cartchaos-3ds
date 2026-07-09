@@ -617,6 +617,7 @@ int main(){
 
         prevA=a; prevB=b; prevStart=start;
 
+        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
         drawWorld(top, g);
         drawHUD(bot, g);
         drawOverlay(top, g);
