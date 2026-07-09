@@ -312,6 +312,7 @@ static void txt(float x, float y, float s, u32 col, const char* fmt, ...);
 // ndsp tone channels
 static ndspWaveBuf waveBuffers[2];
 static int16_t toneBuf[2][256];
+static bool audioOK = false;
 static int curTone=0;
 
 // Screen-space projection for the road. We draw the road as a series of
@@ -517,9 +518,11 @@ static void drawOverlay(C3D_RenderTarget* top, Game& g){
 
 // --- ndsp audio: simple square-wave tones for sfx ---
 static void toneInit(){
-    ndspInit();
+    if (ndspInit() != 0) { audioOK = false; return; }   // audio optional; never crash if it fails
+    audioOK = true;
     ndspSetOutputMode(NDSP_OUTPUT_STEREO);
     ndspChnReset(0);
+    ndspChnSetInterp(0, NDSP_INTERP_POLYPHASE);
     ndspChnSetFormat(0, NDSP_FORMAT_MONO_PCM16);
     ndspChnSetRate(0, 22050.0f);
     for (int b=0;b<2;b++){ std::memset(toneBuf[b],0,sizeof(toneBuf[b]));
@@ -529,14 +532,16 @@ static void toneInit(){
     }
 }
 static void playTone(float freq, float dur, float vol){
+    if (!audioOK) return;
     int b=curTone; curTone^=1;
-    int n=256; float tv=1.0f/(float)n;
+    if (waveBuffers[b].status != NDSP_WBUF_FREE) return;   // skip if still playing
+    int n=256; float tv=1.0f/(float)n; (void)tv;(void)dur;
     for (int i=0;i<n;i++){
         float ph = fmodf((float)i*(freq/22050.0f),1.0f);
         toneBuf[b][i]=(int16_t)( (ph<0.5f? 3000:-3000) * vol );
     }
+    waveBuffers[b].status = NDSP_WBUF_FREE;   // required before each WaveBufAdd
     ndspChnWaveBufAdd(0,&waveBuffers[b]);
-    (void)tv;(void)dur;
 }
 static void sfx(int id){
     switch(id){
@@ -617,7 +622,7 @@ int main(){
         gspWaitForVBlank();
     }
 
-    ndspExit();
+    if (audioOK) ndspExit();
     if (g_font) C2D_FontFree(g_font);
     if (g_textBuf) C2D_TextBufDelete(g_textBuf);
     C2D_Fini();
