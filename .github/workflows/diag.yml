@@ -1,0 +1,19 @@
+name: diag
+on:
+  workflow_dispatch:
+  push:
+    branches: [ diag ]
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+    steps:
+      - name: Inspect citro2d text/font API
+        run: |
+          echo "=== c2d/text.h (TextParse/DrawText/TextBuf) ==="
+          sed -n '1,200p' /opt/devkitpro/citro2d/include/c2d/text.h 2>/dev/null || find / -name "text.h" -path "*c2d*" 2>/dev/null
+          echo "=== c2d/font.h (FontLoad/SetFont) ==="
+          sed -n '1,200p' /opt/devkitpro/citro2d/include/c2d/font.h 2>/dev/null || find / -name "font.h" -path "*c2d*" 2>/dev/null
+          echo "=== search for any fontBinding function in citro2d headers ==="
+          grep -rnE "TextBufSetFont|FontSet|SetFont|FontLoad|TextBufNew|TextParse|defaultFont|CurrentFont" /opt/devkitpro/citro2d/include/c2d/ 2>/dev/null | head -40
