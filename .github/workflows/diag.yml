@@ -11,9 +11,9 @@ jobs:
     steps:
       - name: Inspect citro2d text/font API
         run: |
-          echo "=== c2d/text.h (TextParse/DrawText/TextBuf) ==="
-          sed -n '1,200p' /opt/devkitpro/citro2d/include/c2d/text.h 2>/dev/null || find / -name "text.h" -path "*c2d*" 2>/dev/null
-          echo "=== c2d/font.h (FontLoad/SetFont) ==="
-          sed -n '1,200p' /opt/devkitpro/citro2d/include/c2d/font.h 2>/dev/null || find / -name "font.h" -path "*c2d*" 2>/dev/null
-          echo "=== search for any fontBinding function in citro2d headers ==="
-          grep -rnE "TextBufSetFont|FontSet|SetFont|FontLoad|TextBufNew|TextParse|defaultFont|CurrentFont" /opt/devkitpro/citro2d/include/c2d/ 2>/dev/null | head -40
+          echo "=== c2d/text.h ==="
+          sed -n '1,220p' /opt/devkitpro/citro2d/include/c2d/text.h 2>/dev/null || find / -name "text.h" -path "*c2d*" 2>/dev/null
+          echo "=== c2d/font.h ==="
+          sed -n '1,220p' /opt/devkitpro/citro2d/include/c2d/font.h 2>/dev/null || find / -name "font.h" -path "*c2d*" 2>/dev/null
+          echo "=== font/text binding functions ==="
+          grep -rnE "TextBufSetFont|FontSet|SetFont|FontLoad|TextBufNew|TextParse|defaultFont|CurrentFont|FontGetDefault" /opt/devkitpro/citro2d/include/c2d/ 2>/dev/null | head -50
