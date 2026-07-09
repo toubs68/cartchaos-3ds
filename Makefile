@@ -48,6 +48,7 @@ CXXFLAGS := $(CFLAGS)
 # libctru (includes ndsp + ctrud), citro2d, and the 3DS portlibs.
 LDFLAGS := -specs=$(DEVKITARM)/arm-none-eabi/lib/3dsx.specs -g \
            -L$(DEVKITARM)/arm-none-eabi/lib \
+           -L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu \
            -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
 
 # Auto-generated dependency list

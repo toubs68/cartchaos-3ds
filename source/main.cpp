@@ -328,10 +328,7 @@ static u32 skyColorFor(Biome b){
         case Biome::CLIFF: return C_SKY_CLIFF; default: return C_SKY_CITY; }
 }
 
-// Draw a filled triangle helper
-static void fillTri(u32 c, float x0,float y0,float x1,float y1,float x2,float y2){
-    C2D_DrawTriangle(x0,y0,c,x1,y1,c,x2,y2,c,0);
-}
+// Draw a filled quad helper (two triangles)
 static void fillQuad(u32 c, float x0,float y0,float x1,float y1,float x2,float y2,float x3,float y3){
     C2D_DrawTriangle(x0,y0,c,x1,y1,c,x2,y2,c,0);
     C2D_DrawTriangle(x2,y2,c,x1,y1,c,x3,y3,c,0);
@@ -593,8 +590,8 @@ int main(){
 
         inp.push = a || up;                 // A or Up = sprint / pedal push
         inp.jump = a && !prevA;             // edge: hop in
-        inp.lean = (down?-1.0f:0.0f) + (up?0.6f:0.0f); // up=lean fwd(accel), down=brake
-        if (up) inp.lean=0.7f; if (down) inp.lean=-0.7f;
+        // up = lean forward (accelerate), down = lean back (brake)
+        inp.lean = up ? 0.7f : (down ? -0.7f : 0.0f);
         inp.steer = (left?-1.0f:0.0f)+(right?1.0f:0.0f); if (cp!=0) inp.steer=cp;
         inp.useDrink = b && !prevB;
         inp.start = start && !prevStart;
