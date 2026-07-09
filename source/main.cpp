@@ -573,7 +573,7 @@ int main(){
     C3D_RenderTarget* bot = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
     toneInit();
     g_font = C2D_FontLoadSystem(CFG_REGION_USA);
-    if (!g_textBuf) { g_textBuf = C2D_TextBufNew(4096); C2D_TextBufSetFont(g_textBuf, g_font); }
+    if (!g_textBuf) g_textBuf = C2D_TextBufNew(4096);
 
     Game g(0x1234 + (uint32_t)osGetTime());
     Input inp{}; float rollAccum=0;
