@@ -557,7 +557,7 @@ static C2D_TextBuf g_textBuf = NULL;
 #include <cstdarg>
 static void txt(float x, float y, float s, u32 col, const char* fmt, ...){
     char buf[160]; va_list ap; va_start(ap,fmt); vsnprintf(buf,sizeof buf,fmt,ap); va_end(ap);
-    C2D_Text t; C2D_TextParse(&t, g_textBuf, g_font, buf);
+    C2D_Text t; C2D_TextParse(&t, g_textBuf, buf);
     C2D_DrawText(&t, C2D_AlignLeft, x, y, 0.5f, s, s, col);
 }
 
@@ -573,7 +573,7 @@ int main(){
     C3D_RenderTarget* bot = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
     toneInit();
     g_font = C2D_FontLoadSystem(CFG_REGION_USA);
-    if (!g_textBuf) g_textBuf = C2D_TextBufNew(4096);
+    if (!g_textBuf) { g_textBuf = C2D_TextBufNew(4096); C2D_TextBufSetFont(g_textBuf, g_font); }
 
     Game g(0x1234 + (uint32_t)osGetTime());
     Input inp{}; float rollAccum=0;
