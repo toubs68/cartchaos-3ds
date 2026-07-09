@@ -41,11 +41,9 @@ CXXFLAGS := $(CFLAGS)
 # 3DS entry point + linker script live here (absolutely pathed to bypass the
 # startfile search, which ignores -L). The -L paths cover libctru/citro2d/
 # portlibs; ndsp/ctrud are provided by libctru.
-CRT0    := $(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu/3dsx_crt0.o
-# Hard-float (VFP) startfiles so the final ELF ABI matches libctru/libstdc++.
-FPUCRT  := $(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu
+# Entry point + linker script resolved by cartchaos.specs (see that file).
 LDSCRIPT := $(DEVKITARM)/arm-none-eabi/lib/3dsx.ld
-LDFLAGS := -g -Wl,--emit-relocs -Wl,--use-blx -Wl,--gc-sections \
+LDFLAGS := -specs=cartchaos.specs -g \
            -L$(DEVKITARM)/arm-none-eabi/lib \
            -L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu \
            -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
@@ -66,12 +64,7 @@ $(BUILD)/%.o: %.cpp
 	$(CC) -MMD -MP -MF $(BUILD)/$*.d $(CXXFLAGS) -c $< -o $@
 
 $(BUILD)/$(TARGET).elf: $(OFILES)
-	$(CC) -nostartfiles \
-	  $(CRT0) $(FPUCRT)/crti.o $(FPUCRT)/crtbegin.o \
-	  $(OFILES) \
-	  -T$(LDSCRIPT) $(LDFLAGS) $(LIBS) \
-	  $(FPUCRT)/crtend.o $(FPUCRT)/crtn.o \
-	  -o $@
+	$(CC) $(OFILES) $(LDFLAGS) $(LIBS) -o $@
 
 $(BUILD)/$(TARGET).smdh: $(APP_ICON)
 	@mkdir -p $(dir $@)

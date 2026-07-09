@@ -1,0 +1,13 @@
+# Custom 3DS link spec.
+# Based on the devkitARM 3dsx.specs, but the 3DS entry-point object
+# (3dsx_crt0.o) only exists in the armv6k/fpu multilib dir and the default
+# startfile search path does not resolve it in this image. We point at it by
+# absolute path; the remaining crti/crtbegin are resolved by GCC's normal
+# (hard-float, VFP) multilib selection so the final ELF ABI stays consistent.
+%include <sync-dmb.specs>
+
+*link:
++ -T 3dsx.ld%s -d --emit-relocs --use-blx --gc-sections
+
+*startfile:
+/opt/devkitpro/devkitARM/arm-none-eabi/lib/armv6k/fpu/3dsx_crt0.o crti%O%s crtbegin%O%s
