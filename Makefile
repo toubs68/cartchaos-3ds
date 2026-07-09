@@ -15,13 +15,11 @@ SOURCES     := source/main.cpp
 DATA        :=
 INCLUDES    :=
 
-LIBS        := -lctru -lcitro2d -lctrud
-
-ICON        := resources/icon.png
-SMDHTOOL    := smdhtool
-TITLE       := Cart Chaos 3D
-DESC        := downhill shopping-cart mayhem
-AUTHOR      := OpenClaude
+# Title metadata for the home-menu icon (.smdh)
+APP_TITLE       := Cart Chaos 3D
+APP_DESCRIPTION := downhill shopping-cart mayhem
+APP_AUTHOR      := OpenClaude
+APP_ICON        := resources/icon.png
 
 # --- devkitPro toolchain location (env vars set by the devkitpro container) ---
 DEVKITPRO  ?= /opt/devkitpro
@@ -33,25 +31,27 @@ PORTLIBS    ?= $(DEVKITPRO)/portlibs/3ds
 export PATH := $(DEVKITARM)/bin:$(PATH)
 CC          := $(DEVKITARM)/bin/arm-none-eabi-g++
 OBJCOPY     := $(DEVKITARM)/bin/arm-none-eabi-objcopy
-STRIP       := $(DEVKITARM)/bin/arm-none-eabi-strip
 
-# Canonical 3DS arch flags. -mfpu=vfpv2 is REQUIRED so the linker finds the
-# right multilib (3dsx_crt0.o) and the 3DS libraries.
+# Canonical 3DS arch flags. -mfpu=vfpv2 selects the armv6k/fpu multilib.
 CFLAGS  := -Wall -O2 -march=armv6k -mtune=mpcore -mfloat-abi=hard \
            -mfpu=vfpv2 -ffast-math -fno-rtti -std=gnu++17 \
            -I$(CTRULIB)/include -I$(CITRO2D)/include $(INCLUDES)
 CXXFLAGS := $(CFLAGS)
 
-# -specs points at the 3dsx specs file. The 3DS crt0 (3dsx_crt0.o) lives in
-# devkitARM/arm-none-eabi/lib/armv6k/fpu; GCC appends that multilib subdir to
-# every -L, so we must include the base arm-none-eabi/lib path. Library dirs:
-# libctru (includes ndsp + ctrud), citro2d, and the 3DS portlibs.
-LDFLAGS := -specs=$(DEVKITARM)/arm-none-eabi/lib/3dsx.specs -g \
+# 3DS entry point + linker script live here (absolutely pathed to bypass the
+# startfile search, which ignores -L). The -L paths cover libctru/citro2d/
+# portlibs; ndsp/ctrud are provided by libctru.
+CRT0    := $(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu/3dsx_crt0.o
+LDSCRIPT := $(DEVKITARM)/arm-none-eabi/lib/3dsx.ld
+LDFLAGS := -g --emit-relocs --use-blx --gc-sections \
            -L$(DEVKITARM)/arm-none-eabi/lib \
            -L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu \
            -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
 
-# Auto-generated dependency list
+LIBS    := -lctru -lcitro2d -lctrud
+
+SMDHTOOL    := smdhtool
+
 OFILES := $(SOURCES:%.cpp=$(BUILD)/%.o)
 
 .PHONY: all clean cia
@@ -63,12 +63,11 @@ $(BUILD)/%.o: %.cpp
 	$(CC) -MMD -MP -MF $(BUILD)/$*.d $(CXXFLAGS) -c $< -o $@
 
 $(BUILD)/$(TARGET).elf: $(OFILES)
-	$(CC) $(OFILES) $(LDFLAGS) $(LIBS) -o $@
+	$(CC) $(OFILES) $(CRT0) -T$(LDSCRIPT) $(LDFLAGS) $(LIBS) -o $@
 
-# Generate the home-menu icon metadata from the PNG.
-$(BUILD)/$(TARGET).smdh: $(ICON)
+$(BUILD)/$(TARGET).smdh: $(APP_ICON)
 	@mkdir -p $(dir $@)
-	$(SMDHTOOL) --create "$(TITLE)" "$(DESC)" "$(AUTHOR)" "$(ICON)" "$@"
+	$(SMDHTOOL) --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" "$(APP_ICON)" "$@"
 
 $(BUILD)/$(TARGET).3dsx: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).smdh
 	3dsxtool $< $@ --smdh="$(BUILD)/$(TARGET).smdh"
