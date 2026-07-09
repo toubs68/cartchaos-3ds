@@ -42,8 +42,12 @@ CXXFLAGS := $(CFLAGS)
 # startfile search, which ignores -L). The -L paths cover libctru/citro2d/
 # portlibs; ndsp/ctrud are provided by libctru.
 # Entry point + linker script resolved by cartchaos.specs (see that file).
+# ARCH flags MUST be on the link line too, so the final ELF is tagged
+# hard-float (VFP) and the matching crti/crtbegin multilib is selected —
+# otherwise the ELF defaults to soft-float and mismatches libctru.
 LDSCRIPT := $(DEVKITARM)/arm-none-eabi/lib/3dsx.ld
-LDFLAGS := -specs=cartchaos.specs -g \
+LDFLAGS := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfpv2 \
+           -specs=cartchaos.specs -g \
            -L$(DEVKITARM)/arm-none-eabi/lib \
            -L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu \
            -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
