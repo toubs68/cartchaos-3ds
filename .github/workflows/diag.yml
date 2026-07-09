@@ -9,23 +9,21 @@ jobs:
     container:
       image: devkitpro/devkitarm:latest
     steps:
-      - name: Explore toolchain layout
+      - name: Inspect multilib + 3ds_rules
         run: |
-          echo "=== tools ==="
-          which arm-none-eabi-g++ 3dsxtool smdhtool makerom bannertool || true
-          echo "=== /opt/devkitpro ==="
-          ls -la /opt/devkitpro 2>/dev/null || echo "no /opt/devkitpro"
-          echo "=== find 3dsx.specs ==="
-          find / -name "3dsx.specs" 2>/dev/null | head
-          echo "=== find 3dsx_crt0.o ==="
-          find / -name "3dsx_crt0.o" 2>/dev/null | head
-          echo "=== find libndsp.a / libctrud.a ==="
-          find / -name "libndsp.a" -o -name "libctrud.a" 2>/dev/null | head
-          echo "=== portlibs/3ds/lib ==="
-          ls /opt/devkitpro/portlibs/3ds/lib 2>/dev/null | head -50 || echo "no portlibs/3ds"
-          echo "=== libctru/lib ==="
-          ls /opt/devkitpro/libctru/lib 2>/dev/null | head || echo "no libctru/lib"
-          echo "=== citro2d/lib ==="
-          ls /opt/devkitpro/citro2d/lib 2>/dev/null | head || echo "no citro2d/lib"
-          echo "=== arm-none-eabi lib (crt0 etc) ==="
-          ls /opt/devkitpro/devkitARM/arm-none-eabi/lib 2>/dev/null | grep -E "3dsx|crt0" | head
+          CC=/opt/devkitpro/devkitARM/bin/arm-none-eabi-gcc
+          echo "=== multilib map ==="
+          $CC -print-multi-lib
+          echo "=== which multilib do our flags select? ==="
+          for F in "-march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfp" \
+                   "-march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfpv2" \
+                   "-march=armv6k -mtune=mpcore -mfloat-abi=softfp -mfpu=vfp" \
+                   "-mcpu=mpcore -mfloat-abi=hard -mfpu=vfpv2"; do
+            echo "FLAGS [$F] -> $($CC -print-multi-directory $F 2>&1)"
+          done
+          echo "=== official 3ds_rules ARCH/LDFLAGS ==="
+          grep -nE "^ARCH|^CFLAGS|^CXXFLAGS|^LDFLAGS|^LIBPATHS|^PORTLIBS|^LIBS|3dsx.specs|vfp" /opt/devkitpro/devkitARM/3ds_rules 2>/dev/null | head -40
+          echo "=== does 3dsx.specs add the fpu lib path? ==="
+          grep -o "armv6k/fpu" /opt/devkitpro/devkitARM/arm-none-eabi/lib/3dsx.specs || echo "no armv6k/fpu ref in specs"
+          echo "=== show *lib section of specs ==="
+          sed -n '/\*lib:/,/^)/p' /opt/devkitpro/devkitARM/arm-none-eabi/lib/3dsx.specs
