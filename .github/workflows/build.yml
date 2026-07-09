@@ -37,7 +37,7 @@ jobs:
         run: make -j"$(nproc)"
 
       - name: List artifacts
-        run: ls -la build/ cartchaos.3dsx cartchaos.smdh 2>/dev/null
+        run: ls -la build/cartchaos.3dsx build/cartchaos.smdh
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
