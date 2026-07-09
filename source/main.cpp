@@ -294,17 +294,17 @@ private:
 #define SCREEN_W 400
 #define SCREEN_H 240
 
-// Palette (light cartoon style)
-static const C2D_Color C_SKY_CITY    = C2D_Color32(150,200,235,255);
-static const C2D_Color C_SKY_IND     = C2D_Color32(180,175,160,255);
-static const C2D_Color C_SKY_COUNTRY = C2D_Color32(170,215,180,255);
-static const C2D_Color C_SKY_CLIFF   = C2D_Color32(200,200,235,255);
-static const C2D_Color C_ROAD        = C2D_Color32(70,70,78,255);
-static const C2D_Color C_ROAD_LINE   = C2D_Color32(230,220,90,255);
-static const C2D_Color C_GRASS       = C2D_Color32(110,180,90,255);
-static const C2D_Color C_CART        = C2D_Color32(210,90,60,255);
-static const C2D_Color C_CART_DARK   = C2D_Color32(150,50,30,255);
-static const C2D_Color C_WHEEL       = C2D_Color32(40,40,45,255);
+// Palette (light cartoon style). In citro2d colors are plain u32 (C2D_Color32).
+static const u32 C_SKY_CITY    = C2D_Color32(150,200,235,255);
+static const u32 C_SKY_IND     = C2D_Color32(180,175,160,255);
+static const u32 C_SKY_COUNTRY = C2D_Color32(170,215,180,255);
+static const u32 C_SKY_CLIFF   = C2D_Color32(200,200,235,255);
+static const u32 C_ROAD        = C2D_Color32(70,70,78,255);
+static const u32 C_ROAD_LINE   = C2D_Color32(230,220,90,255);
+static const u32 C_GRASS       = C2D_Color32(110,180,90,255);
+static const u32 C_CART        = C2D_Color32(210,90,60,255);
+static const u32 C_CART_DARK   = C2D_Color32(150,50,30,255);
+static const u32 C_WHEEL       = C2D_Color32(40,40,45,255);
 
 // Forward declaration for the text helper (defined near audio section).
 static void txt(float x, float y, float s, u32 col, const char* fmt, ...);
@@ -322,17 +322,17 @@ struct Cam {
     float camY;     // height offset
 };
 
-static C2D_Color skyColorFor(Biome b){
+static u32 skyColorFor(Biome b){
     switch(b){ case Biome::INDUSTRIAL: return C_SKY_IND;
         case Biome::COUNTRY: return C_SKY_COUNTRY;
         case Biome::CLIFF: return C_SKY_CLIFF; default: return C_SKY_CITY; }
 }
 
 // Draw a filled triangle helper
-static void fillTri(C2D_Color c, float x0,float y0,float x1,float y1,float x2,float y2){
+static void fillTri(u32 c, float x0,float y0,float x1,float y1,float x2,float y2){
     C2D_DrawTriangle(x0,y0,c,x1,y1,c,x2,y2,c,0);
 }
-static void fillQuad(C2D_Color c, float x0,float y0,float x1,float y1,float x2,float y2,float x3,float y3){
+static void fillQuad(u32 c, float x0,float y0,float x1,float y1,float x2,float y2,float x3,float y3){
     C2D_DrawTriangle(x0,y0,c,x1,y1,c,x2,y2,c,0);
     C2D_DrawTriangle(x2,y2,c,x1,y1,c,x3,y3,c,0);
 }
@@ -396,32 +396,32 @@ static void drawWorld(C3D_RenderTarget* top, Game& g){
         // left/right road edges in lateral space (-1..1)
         float lx0,ly0,lx1,ly1,rx0,ry0,rx1,ry1;
         float h0 = g.world().roadHeight(x0), h1=g.world().roadHeight(x1);
-        ly0=projectY(x0,-1.0f,h0,&g,&lx0);
-        ry0=projectY(x0, 1.0f,h0,&g,&rx0);
-        ly1=projectY(x1,-1.0f,h1,&g,&lx1);
-        ry1=projectY(x1, 1.0f,h1,&g,&rx1);
+        ly0=projectY(x0,-1.0f,h0,g,&lx0);
+        ry0=projectY(x0, 1.0f,h0,g,&rx0);
+        ly1=projectY(x1,-1.0f,h1,g,&lx1);
+        ry1=projectY(x1, 1.0f,h1,g,&rx1);
         lx0+=ox; ly0+=oy; rx0+=ox; ry0+=oy; lx1+=ox; ly1+=oy; rx1+=ox; ry1+=oy;
         fillQuad(C_ROAD, lx0,ly0, rx0,ry0, rx1,ry1, lx1,ly1);
         // center dashed line
         if (((int)(x0/6))%2==0){
             float c0x,c0y,c1x,c1y;
-            c0y=projectY(x0,0,h0,&g,&c0x); c1y=projectY(x1,0,h1,&g,&c1x);
+            c0y=projectY(x0,0,h0,g,&c0x); c1y=projectY(x1,0,h1,g,&c1x);
             c0x+=ox;c0y+=oy;c1x+=ox;c1y+=oy;
             fillQuad(C_ROAD_LINE, c0x-2,c0y-1, c0x+2,c0y-1, c1x+2,c1y-1, c1x-2,c1y-1);
         }
     }
 
     // --- obstacles, pickups, cars drawn as billboards ---
-    auto drawBill = [&](float wx, float lat, float baseY, C2D_Color col, float w, float hh){
+    auto drawBill = [&](float wx, float lat, float baseY, u32 col, float w, float hh){
         float h = g.world().roadHeight(wx);
-        float sx,sy; sy=projectY(wx,lat,h+baseY,&g,&sx); sx+=ox; sy+=oy;
+        float sx,sy; sy=projectY(wx,lat,h+baseY,g,&sx); sx+=ox; sy+=oy;
         float scale = 120.0f/(120.0f+(wx-g.cart().x)*2.2f); if(scale<0.05f)scale=0.05f;
         float W=w*scale*150.0f, H=hh*scale*150.0f;
         C2D_DrawRectSolid(sx-W, sy-H, 0, W*2, H, col);
     };
     for (auto& o:g.world().obstacles){
         if (o.x < g.cart().x-10 || o.x > g.cart().x+200) continue;
-        C2D_Color c = C2D_Color32(120,120,130,255);
+        u32 c = C2D_Color32(120,120,130,255);
         switch(o.kind){
             case ObstacleKind::ROCK: c=C2D_Color32(120,110,100,255);break;
             case ObstacleKind::CONE: c=C2D_Color32(230,120,40,255);break;
@@ -450,20 +450,20 @@ static void drawWorld(C3D_RenderTarget* top, Game& g){
 
     // --- the cart (rider + metal basket), a billboard near horizon ---
     {
-        float sx,sy; sy=projectY(g.cart().x, g.cart().lateral, g.cart().y, &g, &sx);
+        float sx,sy; sy=projectY(g.cart().x, g.cart().lateral, g.cart().y, g, &sx);
         sx+=ox; sy+=oy;
         float scale = 1.0f;
         float bw=36, bh=26;
         // shadow
         C2D_DrawRectSolid(sx-bw*0.6, sy-2, 0, bw*1.2, 5, C2D_Color32(0,0,0,90));
         // wheels
-        C2D_DrawCircle(sx-bw*0.5, sy-4, 0, 6, C_WHEEL);
-        C2D_DrawCircle(sx+bw*0.5, sy-4, 0, 6, C_WHEEL);
+        C2D_DrawRectSolid(sx-bw*0.5-3, sy-4-3, 0, 6, 6, C_WHEEL);
+        C2D_DrawRectSolid(sx+bw*0.5-3, sy-4-3, 0, 6, 6, C_WHEEL);
         // basket body (tilts with pitch/roll)
         float tilt = g.cart().roll*0.5f;
         fillQuad(C_CART, sx-bw*0.5, sy-bh, sx+bw*0.5, sy-bh-(tilt*10), sx+bw*0.5, sy-4-(tilt*6), sx-bw*0.5, sy-4);
         // rider head
-        C2D_DrawCircle(sx, sy-bh-8, 0, 7, C2D_Color32(245,205,160,255));
+        C2D_DrawRectSolid(sx-4, sy-bh-8-4, 0, 8, 8, C2D_Color32(245,205,160,255));
         // speed lines
         if (g.cart().vx>14){
             for (int i=0;i<6;i++){
@@ -522,8 +522,7 @@ static void drawOverlay(C3D_RenderTarget* top, Game& g){
 static void toneInit(){
     ndspInit();
     ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-    ndspSetOutputCount(1);
-    ndspChanReset(0);
+    ndspChnReset(0);
     ndspChnSetFormat(0, NDSP_FORMAT_MONO_PCM16);
     ndspChnSetRate(0, 22050.0f);
     for (int b=0;b<2;b++){ std::memset(toneBuf[b],0,sizeof(toneBuf[b]));
@@ -557,7 +556,7 @@ static C2D_Font g_font = NULL;
 #include <cstdarg>
 static void txt(float x, float y, float s, u32 col, const char* fmt, ...){
     char buf[160]; va_list ap; va_start(ap,fmt); vsnprintf(buf,sizeof buf,fmt,ap); va_end(ap);
-    C2D_Text t; C2D_FontParse(&t, g_font, buf);
+    C2D_Text t; C2D_TextParse(&t, g_font, buf);
     C2D_DrawText(&t, C2D_AlignLeft, x, y, 0.5f, s, s, col);
 }
 
@@ -572,7 +571,7 @@ int main(){
     C3D_RenderTarget* top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
     C3D_RenderTarget* bot = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
     toneInit();
-    g_font = C2D_FontLoadSystem();
+    g_font = C2D_FontLoadSystem(CFG_REGION_USA);
 
     Game g(0x1234 + (uint32_t)osGetTime());
     Input inp{}; float rollAccum=0;
@@ -621,8 +620,8 @@ int main(){
 
     ndspExit();
     if (g_font) C2D_FontFree(g_font);
-    C2D_Free();
-    C3D_Deinit();
+    C2D_Fini();
+    C3D_Fini();
     gfxExit();
     return 0;
 }
