@@ -15,7 +15,7 @@ SOURCES     := source/main.cpp
 DATA        :=
 INCLUDES    :=
 
-LIBS        := -lctru -lcitro2d -lctrud -lndsp
+LIBS        := -lctru -lcitro2d -lctrud
 
 ICON        := resources/icon.png
 SMDHTOOL    := smdhtool
@@ -42,10 +42,12 @@ CFLAGS  := -Wall -O2 -march=armv6k -mtune=mpcore -mfloat-abi=hard \
            -I$(CTRULIB)/include -I$(CITRO2D)/include $(INCLUDES)
 CXXFLAGS := $(CFLAGS)
 
-# -specs must point at the 3dsx specs file by full path so the 3DS crt0 and
-# library search directories are pulled in. Library dirs: libctru, citro2d,
-# and the 3DS portlibs (which provide libndsp / libctrud).
+# -specs points at the 3dsx specs file. The 3DS crt0 (3dsx_crt0.o) lives in
+# devkitARM/arm-none-eabi/lib/armv6k/fpu; GCC appends that multilib subdir to
+# every -L, so we must include the base arm-none-eabi/lib path. Library dirs:
+# libctru (includes ndsp + ctrud), citro2d, and the 3DS portlibs.
 LDFLAGS := -specs=$(DEVKITARM)/arm-none-eabi/lib/3dsx.specs -g \
+           -L$(DEVKITARM)/arm-none-eabi/lib \
            -L$(CTRULIB)/lib -L$(CITRO2D)/lib -L$(PORTLIBS)/lib
 
 # Auto-generated dependency list
